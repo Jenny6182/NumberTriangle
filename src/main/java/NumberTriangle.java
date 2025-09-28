@@ -1,4 +1,6 @@
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This is the provided NumberTriangle class to be used in this coding task.
@@ -107,29 +109,67 @@ public class NumberTriangle {
         // open the file and get a BufferedReader object whose methods
         // are more convenient to work with when reading the file contents.
         InputStream inputStream = NumberTriangle.class.getClassLoader().getResourceAsStream(fname);
+        if (inputStream == null) throw new IOException("File not found: " + fname);
+
         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
+        // Step 1: read all rows into lists of numbers
+        List<List<Integer>> rowsOfNumbers = new ArrayList<>();
+        String line;
+        while ((line = br.readLine()) != null) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
 
-        // TODO define any variables that you want to use to store things
-
-        // will need to return the top of the NumberTriangle,
-        // so might want a variable for that.
-        NumberTriangle top = null;
-
-        String line = br.readLine();
-        while (line != null) {
-
-            // remove when done; this line is included so running starter code prints the contents of the file
-            System.out.println(line);
-
-            // TODO process the line
-
-            //read the next line
-            line = br.readLine();
+            String[] tokens = line.split("\\s+");
+            List<Integer> row = new ArrayList<>();
+            for (String token : tokens) {
+                row.add(Integer.parseInt(token));
+            }
+            rowsOfNumbers.add(row);
         }
         br.close();
-        return top;
+
+
+//        Use this to check if rows of numbers are actually fine, it's fine I checked V
+        System.out.println(rowsOfNumbers);
+
+        // Step 2: convert numbers to NumberTriangle nodes row by row
+        List<List<NumberTriangle>> rowsOfNodes = new ArrayList<>();
+
+        for (int r = 0; r < rowsOfNumbers.size(); r++) {
+            List<Integer> rowNums = rowsOfNumbers.get(r);
+            List<NumberTriangle> currentRow = new ArrayList<>();
+
+            // create NumberTriangle nodes for this row
+            for (int val : rowNums) {
+                NumberTriangle current_new_triangle = new NumberTriangle(val);
+                int id = System.identityHashCode(current_new_triangle);
+                currentRow.add(current_new_triangle);
+            }
+
+            // link children to previous row nodes
+            if (r > 0) {
+                List<NumberTriangle> prevRow = rowsOfNodes.get(r - 1);
+                for (int i = 0; i < prevRow.size(); i++) {
+                    NumberTriangle parent = prevRow.get(i);
+                    // each parent connects to two children in current row: child i and child i+1
+                    System.out.println("parent: " + parent.getRoot());
+                    parent.setLeft(currentRow.get(i));
+                    parent.setRight(currentRow.get(i + 1));
+                    System.out.println("left: " + parent.left.getRoot());
+                    System.out.println("right: " + parent.right.getRoot());
+                }
+            }
+
+            rowsOfNodes.add(currentRow);
+        }
+
+        // the top of the triangle is the first node of the first row
+        return rowsOfNodes.get(0).get(0);
+
     }
+
+
 
     public static void main(String[] args) throws IOException {
 
